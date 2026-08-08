@@ -1,0 +1,338 @@
+/* Console layout. A queue is scanned and operated, not read top to bottom, so state
+ * has to be legible in form as well as in number: a stripe on the row, a pill on the
+ * status, a count on the tab. */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--adsum-bg);
+  color: var(--adsum-ink);
+  font-family: var(--adsum-font-ui);
+  font-size: var(--adsum-text-base);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--adsum-font-display);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--adsum-acc);
+  outline-offset: 2px;
+}
+
+.muted { color: var(--adsum-mut); }
+.small { font-size: var(--adsum-text-sm); }
+.mono { font-family: var(--adsum-font-mono); font-variant-numeric: tabular-nums; }
+
+/* --- Frame ---------------------------------------------------------------- */
+
+.cadre {
+  display: grid;
+  grid-template-columns: 232px 1fr;
+  min-height: 100vh;
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 14px;
+  background: var(--console-rail);
+  border-right: 1px solid var(--console-rail-line);
+}
+
+.rail-marque {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 8px 18px;
+  border-bottom: 1px solid var(--console-rail-line);
+  margin-bottom: 14px;
+}
+.rail-marque strong {
+  font-family: var(--adsum-font-display);
+  font-size: 17px;
+  color: var(--console-rail-ink);
+  letter-spacing: -0.01em;
+}
+.rail-marque span {
+  font-size: 11px;
+  color: var(--console-rail-mut);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.rail-lien {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px;
+  border: none;
+  border-radius: var(--adsum-radius-sm);
+  background: none;
+  color: var(--console-rail-mut);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+.rail-lien:hover { background: var(--console-rail-2); color: var(--console-rail-ink); }
+.rail-lien.actif { background: var(--adsum-acc); color: #fff; font-weight: 600; }
+.rail-compte {
+  min-width: 20px;
+  padding: 1px 7px;
+  border-radius: var(--adsum-radius-pill);
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.rail-pied {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--console-rail-line);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rail-pied span { font-size: 11px; color: var(--console-rail-mut); word-break: break-all; }
+
+.contenu {
+  padding: 26px 30px 60px;
+  max-width: 1200px;
+  width: 100%;
+}
+
+.tete {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+.tete h1 { font-size: var(--adsum-text-2xl); }
+.tete p { margin: 0; color: var(--adsum-mut); font-size: var(--adsum-text-sm); max-width: 68ch; }
+
+/* --- Blocks --------------------------------------------------------------- */
+
+.carte {
+  background: var(--adsum-panel);
+  border: 1px solid var(--adsum-line);
+  border-radius: var(--adsum-radius-lg);
+  padding: 18px;
+  box-shadow: var(--adsum-shadow-sm);
+  margin-bottom: 16px;
+}
+
+.bandeau {
+  padding: 11px 14px;
+  border-radius: var(--adsum-radius-md);
+  font-size: var(--adsum-text-sm);
+  margin-bottom: 14px;
+  border-left: 3px solid;
+}
+.bandeau-erreur { background: var(--adsum-danger-bg); border-left-color: var(--adsum-danger); color: var(--adsum-danger); }
+.bandeau-ok { background: var(--adsum-ok-bg); border-left-color: var(--adsum-ok); color: var(--adsum-ok); }
+.bandeau-info { background: var(--adsum-acc-bg); border-left-color: var(--adsum-acc); color: var(--adsum-ink2); }
+
+.indicateurs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.indicateur {
+  background: var(--adsum-panel);
+  border: 1px solid var(--adsum-line);
+  border-radius: var(--adsum-radius-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.indicateur-valeur {
+  font-family: var(--adsum-font-display);
+  font-size: var(--adsum-text-2xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.indicateur-libelle { font-size: var(--adsum-text-xs); color: var(--adsum-mut); }
+.indicateur-alerte .indicateur-valeur { color: var(--adsum-danger); }
+.indicateur-attention .indicateur-valeur { color: var(--adsum-warn); }
+
+/* --- Controls ------------------------------------------------------------- */
+
+.barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.champ {
+  padding: 8px 11px;
+  border: 1px solid var(--adsum-line);
+  border-radius: var(--adsum-radius-sm);
+  background: var(--adsum-panel);
+  color: var(--adsum-ink);
+  font-size: var(--adsum-text-sm);
+}
+.champ-large { flex: 1 1 240px; min-width: 180px; }
+
+.bouton {
+  padding: 8px 14px;
+  border-radius: var(--adsum-radius-sm);
+  border: 1px solid var(--adsum-acc);
+  background: var(--adsum-acc);
+  color: #fff;
+  font-size: var(--adsum-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+.bouton:disabled { opacity: 0.5; cursor: not-allowed; }
+.bouton-discret {
+  background: none;
+  color: var(--adsum-ink2);
+  border-color: var(--adsum-line);
+}
+.bouton-discret:hover:not(:disabled) { border-color: var(--adsum-acc); color: var(--adsum-acc); }
+
+/* --- Queue ---------------------------------------------------------------- */
+
+.file { display: flex; flex-direction: column; gap: 8px; }
+
+.fil {
+  display: grid;
+  grid-template-columns: 3px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--adsum-line);
+  border-radius: var(--adsum-radius-md);
+  background: var(--adsum-panel);
+  cursor: pointer;
+  text-align: left;
+  overflow: hidden;
+}
+.fil:hover { border-color: var(--adsum-acc); }
+/* The stripe encodes urgency in form, so a queue is scannable without reading. */
+.fil-bande { align-self: stretch; background: var(--adsum-line); }
+.fil-critique .fil-bande { background: var(--adsum-danger); }
+.fil-haute .fil-bande { background: var(--adsum-warn); }
+.fil-corps { display: flex; flex-direction: column; gap: 3px; padding: 12px 0; min-width: 0; }
+.fil-sujet { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fil-meta { font-size: var(--adsum-text-xs); color: var(--adsum-mut); }
+.fil-droite { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+
+.pastille {
+  padding: 3px 9px;
+  border-radius: var(--adsum-radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pastille-nouveau { background: var(--adsum-acc-bg); color: var(--adsum-acc); }
+.pastille-en_cours { background: var(--adsum-warn-bg); color: var(--adsum-warn); }
+.pastille-en_attente { background: var(--adsum-soft); color: var(--adsum-mut); }
+.pastille-resolu, .pastille-clos { background: var(--adsum-ok-bg); color: var(--adsum-ok); }
+
+/* --- Conversation --------------------------------------------------------- */
+
+.echanges { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+.echange {
+  max-width: 78%;
+  padding: 11px 14px;
+  border-radius: var(--adsum-radius-md);
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.echange-entrant { align-self: flex-start; background: var(--adsum-soft); border: 1px solid var(--adsum-line); }
+.echange-sortant { align-self: flex-end; background: var(--adsum-acc-bg); border: 1px solid var(--adsum-acc); }
+.echange-auteur { display: block; font-size: 11px; color: var(--adsum-mut); margin-bottom: 3px; }
+/* An answer that never left must not look like one that did. */
+.echange-echec { border-color: var(--adsum-danger); background: var(--adsum-danger-bg); }
+.echange-echec .echange-auteur { color: var(--adsum-danger); font-weight: 600; }
+
+.repondre { display: flex; flex-direction: column; gap: 10px; }
+.repondre textarea {
+  width: 100%;
+  min-height: 110px;
+  padding: 11px 13px;
+  border: 1px solid var(--adsum-line);
+  border-radius: var(--adsum-radius-md);
+  background: var(--adsum-panel);
+  color: var(--adsum-ink);
+  font-size: 14px;
+  resize: vertical;
+}
+.repondre-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.case { display: inline-flex; align-items: center; gap: 6px; font-size: var(--adsum-text-sm); color: var(--adsum-ink2); }
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  font-size: var(--adsum-text-sm);
+  color: var(--adsum-mut);
+}
+.pagination-boutons { display: flex; gap: 6px; }
+
+.vide {
+  padding: 44px 20px;
+  text-align: center;
+  color: var(--adsum-mut);
+  font-size: var(--adsum-text-sm);
+}
+
+/* --- Sign in -------------------------------------------------------------- */
+
+.connexion {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--console-rail);
+}
+.connexion-carte {
+  width: 100%;
+  max-width: 380px;
+  background: var(--adsum-panel);
+  border-radius: var(--adsum-radius-lg);
+  padding: 28px;
+  box-shadow: var(--adsum-shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.connexion-carte h1 { font-size: var(--adsum-text-xl); }
+.connexion-champ { display: flex; flex-direction: column; gap: 5px; }
+.connexion-champ span { font-size: var(--adsum-text-xs); font-weight: 600; }
+.connexion-champ input { padding: 10px 12px; border: 1px solid var(--adsum-line); border-radius: var(--adsum-radius-sm); background: var(--adsum-panel); color: var(--adsum-ink); }
+
+@media (max-width: 860px) {
+  .cadre { grid-template-columns: 1fr; }
+  .rail { flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--console-rail-line); padding: 10px; }
+  .rail-marque, .rail-pied { display: none; }
+  .rail-lien { flex: 0 0 auto; }
+  .contenu { padding: 18px 16px 48px; }
+  .echange { max-width: 92%; }
+}

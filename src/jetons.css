@@ -1,0 +1,109 @@
+/* Design tokens of the publisher's console.
+ *
+ * Deliberately its own file rather than the shared @adsum/tokens package. Two reasons,
+ * both structural.
+ *
+ * The console must never wear a client organisation's brand. The shared tokens follow
+ * the colour an organisation configures, which is exactly right for the applications
+ * its members use and exactly wrong here: an operator handling five organisations must
+ * be able to tell at a glance that they are in the publisher's tool, not in somebody's
+ * back office. So the accent is fixed, and it is not the platform blue.
+ *
+ * And a brand-new repository should not need registry credentials to build. Depending
+ * on a private package would make the first deployment fail for a reason that has
+ * nothing to do with the code.
+ *
+ * The variable names match the shared system on purpose, so a component moved between
+ * applications keeps working.
+ */
+:root {
+  --adsum-font-display: 'Space Grotesk', 'IBM Plex Sans', system-ui, sans-serif;
+  --adsum-font-ui: 'IBM Plex Sans', system-ui, sans-serif;
+  --adsum-font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --adsum-text-xs: 12px;
+  --adsum-text-sm: 13px;
+  --adsum-text-base: 15px;
+  --adsum-text-lg: 18px;
+  --adsum-text-xl: 22px;
+  --adsum-text-2xl: 28px;
+
+  --adsum-radius-sm: 8px;
+  --adsum-radius-md: 12px;
+  --adsum-radius-lg: 16px;
+  --adsum-radius-pill: 999px;
+
+  --adsum-shadow-sm: 0 1px 2px rgba(16, 18, 24, 0.08);
+  --adsum-shadow-md: 0 8px 24px rgba(16, 18, 24, 0.12);
+
+  /* Slate ground with a slate-biased neutral, so nothing reads as a stock grey. */
+  --adsum-bg: #f2f3f6;
+  --adsum-panel: #ffffff;
+  --adsum-soft: #f7f8fa;
+  --adsum-ink: #171a21;
+  --adsum-ink2: #3c414b;
+  --adsum-mut: #666c78;
+  --adsum-faint: #949aa6;
+  --adsum-line: #e2e5eb;
+
+  /* Teal, not the platform blue: the console is a different product. */
+  --adsum-acc: #0f6f6c;
+  --adsum-acc2: #0b514f;
+  --adsum-acc-bg: #e6f2f1;
+
+  --adsum-ok: #1f8a5b;
+  --adsum-ok-bg: #e6f3ec;
+  --adsum-warn: #96601a;
+  --adsum-warn-bg: #f8efdd;
+  --adsum-danger: #b8362a;
+  --adsum-danger-bg: #fae9e7;
+
+  /* The sidebar stays dark in both themes: it is the frame, not the content. */
+  --console-rail: #12161d;
+  --console-rail-2: #1a1f28;
+  --console-rail-line: #262c37;
+  --console-rail-ink: #eef0f4;
+  --console-rail-mut: #8a919e;
+}
+
+[data-theme="dark"] {
+  --adsum-bg: #0f1116;
+  --adsum-panel: #14171d;
+  --adsum-soft: #191d25;
+  --adsum-ink: #eceef2;
+  --adsum-ink2: #c6cad2;
+  --adsum-mut: #939aa6;
+  --adsum-faint: #767d89;
+  --adsum-line: #282d37;
+  --adsum-acc: #35a09c;
+  --adsum-acc2: #57bab6;
+  --adsum-acc-bg: #122a29;
+  --adsum-ok: #34a874;
+  --adsum-ok-bg: #14271f;
+  --adsum-warn: #d59b46;
+  --adsum-warn-bg: #2a2213;
+  --adsum-danger: #e0705f;
+  --adsum-danger-bg: #2b1715;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --adsum-bg: #0f1116;
+    --adsum-panel: #14171d;
+    --adsum-soft: #191d25;
+    --adsum-ink: #eceef2;
+    --adsum-ink2: #c6cad2;
+    --adsum-mut: #939aa6;
+    --adsum-faint: #767d89;
+    --adsum-line: #282d37;
+    --adsum-acc: #35a09c;
+    --adsum-acc2: #57bab6;
+    --adsum-acc-bg: #122a29;
+    --adsum-ok: #34a874;
+    --adsum-ok-bg: #14271f;
+    --adsum-warn: #d59b46;
+    --adsum-warn-bg: #2a2213;
+    --adsum-danger: #e0705f;
+    --adsum-danger-bg: #2b1715;
+  }
+}
