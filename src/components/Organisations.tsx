@@ -9,6 +9,7 @@ import {
   type EtatOrganisation,
   type OrganisationCliente,
 } from "../api.js";
+import { Provisionnement } from "./Provisionnement.js";
 import { useResource } from "../useResource.js";
 
 const LIBELLE_ETAT: Record<EtatOrganisation, string> = {
@@ -113,6 +114,7 @@ export function Organisations({ token }: { token: string }): JSX.Element {
         {(d?.organisations ?? []).map((o) => (
           <Fiche
             key={o.id}
+            token={token}
             organisation={o}
             ouverte={ouvert === o.id}
             busy={busy}
@@ -136,6 +138,7 @@ export function Organisations({ token }: { token: string }): JSX.Element {
 }
 
 function Fiche({
+  token,
   organisation: o,
   ouverte,
   busy,
@@ -143,6 +146,7 @@ function Fiche({
   onEtat,
   onLicence,
 }: {
+  token: string;
   organisation: OrganisationCliente;
   ouverte: boolean;
   busy: boolean;
@@ -232,6 +236,15 @@ function Fiche({
           </div>
 
           <FormulaireLicence busy={busy} onAccorder={onLicence} />
+
+          <details style={{ borderTop: "1px dashed var(--adsum-line)", paddingTop: 14 }}>
+            <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: 14 }}>
+              Mise en service : base, domaines et modules
+            </summary>
+            <div style={{ marginTop: 14 }}>
+              <Provisionnement token={token} organisation={o} />
+            </div>
+          </details>
         </div>
       )}
     </div>
