@@ -252,3 +252,86 @@ export function getDestinatairesEnEchec(token: string, jours: number): Promise<D
     "Destinataires indisponibles",
   );
 }
+
+/* ---- Organisations clientes et licences ----------------------------------- */
+
+export type EtatOrganisation = "evaluation" | "active" | "suspendue" | "resiliee";
+
+export interface Licence {
+  id: string;
+  formule: string;
+  membres_inclus: number | null;
+  debut: string | null;
+  fin: string | null;
+  gracieuse: boolean;
+  motif: string | null;
+  remplacee_le: string | null;
+  /** Computed by the server, so the browser cannot disagree about who is licensed. */
+  expiree: boolean;
+  jours_restants: number | null;
+}
+
+export interface OrganisationCliente {
+  id: string;
+  code: string;
+  nom: string;
+  pays: string | null;
+  ville: string | null;
+  contact_nom: string | null;
+  contact_email: string | null;
+  contact_telephone: string | null;
+  etat: EtatOrganisation;
+  suspendue_motif: string | null;
+  suspendue_le: string | null;
+  note: string | null;
+  cree_le: string | null;
+  licence: Licence | null;
+}
+
+export interface ListeOrganisations {
+  total: number;
+  par_etat: Record<EtatOrganisation, number>;
+  organisations: OrganisationCliente[];
+}
+
+export function getOrganisations(token: string): Promise<ListeOrganisations> {
+  return lire<ListeOrganisations>("/api/v1/support/console/organisations", token, "Organisations indisponibles");
+}
+
+export function creerOrganisation(
+  token: string,
+  o: { code: string; nom: string; ville: string; pays: string; contact_nom: string; contact_email: string; note: string },
+): Promise<{ ok: boolean; id: string }> {
+  return ecrire("/api/v1/support/console/organisations", token, "POST", {
+    code: o.code.trim(),
+    nom: o.nom.trim(),
+    ville: o.ville.trim(),
+    pays: o.pays.trim(),
+    contact_nom: o.contact_nom.trim(),
+    // An empty string is not an address: the server validates the format and would
+    // refuse "" rather than treat it as absent.
+    contact_email: o.contact_email.trim() || null,
+    note: o.note.trim(),
+  }, "Enregistrement impossible");
+}
+
+export function changerEtatOrganisation(
+  token: string,
+  id: string,
+  etat: EtatOrganisation,
+  motif: string,
+): Promise<{ ok: boolean; etat: EtatOrganisation }> {
+  return ecrire(`/api/v1/support/console/organisations/${id}/etat`, token, "PATCH", { etat, motif }, "Changement impossible");
+}
+
+export function accorderLicence(
+  token: string,
+  id: string,
+  l: { formule: string; membres_inclus: number | null; debut: string; fin: string | null; gracieuse: boolean; motif: string },
+): Promise<{ ok: boolean; id: string }> {
+  return ecrire(`/api/v1/support/console/organisations/${id}/licences`, token, "POST", l, "Attribution impossible");
+}
+
+export function getHistoriqueLicences(token: string, id: string): Promise<Licence[]> {
+  return lire<Licence[]>(`/api/v1/support/console/organisations/${id}/licences`, token, "Historique indisponible");
+}
