@@ -335,3 +335,67 @@ export function accorderLicence(
 export function getHistoriqueLicences(token: string, id: string): Promise<Licence[]> {
   return lire<Licence[]>(`/api/v1/support/console/organisations/${id}/licences`, token, "Historique indisponible");
 }
+
+/* ---- Provisionnement ------------------------------------------------------ */
+
+export interface ModuleCatalogue {
+  code: string;
+  nom: string;
+  description: string | null;
+  actif: boolean;
+  /** True while no licence names any module: an empty subscription means everything. */
+  souscrit: boolean;
+}
+
+export interface EtapeProvisionnement {
+  code: string;
+  libelle: string;
+  fait: boolean;
+  detail?: string;
+  /** What to do by hand when the step cannot be automatic. */
+  manuel?: string;
+  /** True when the step does not merely fail but forbids going further. */
+  bloquant?: boolean;
+}
+
+export interface Diagnostic {
+  version_attendue: string;
+  etapes: EtapeProvisionnement[];
+}
+
+export interface HoteOrganisation {
+  id: string;
+  hote: string;
+  /** True when the host points at its own database rather than the historical one. */
+  base_propre: boolean;
+  note: string | null;
+}
+
+export function getCatalogueModules(token: string): Promise<ModuleCatalogue[]> {
+  return lire<ModuleCatalogue[]>("/api/v1/support/console/organisations/catalogue/modules", token, "Catalogue indisponible");
+}
+
+export function diagnostiquer(token: string, id: string, dsn: string): Promise<Diagnostic> {
+  return ecrire(`/api/v1/support/console/organisations/${id}/provisionnement/diagnostic`, token, "POST", { dsn }, "Diagnostic impossible");
+}
+
+export function semerReferentiels(token: string, id: string, dsn: string): Promise<{ fait: boolean; copiees: Record<string, number> }> {
+  return ecrire(`/api/v1/support/console/organisations/${id}/provisionnement/referentiels`, token, "POST", { dsn }, "Semis impossible");
+}
+
+export function getHotes(token: string, id: string): Promise<HoteOrganisation[]> {
+  return lire<HoteOrganisation[]>(`/api/v1/support/console/organisations/${id}/hotes`, token, "Domaines indisponibles");
+}
+
+export function rattacherHote(
+  token: string,
+  id: string,
+  hote: string,
+  dsn: string,
+): Promise<{ ok: boolean; hote: string; mode_avant: string; mode_apres: string; avertissement: string | null }> {
+  return ecrire(`/api/v1/support/console/organisations/${id}/hotes`, token, "POST", { hote, dsn }, "Rattachement impossible");
+}
+
+export function definirModules(token: string, id: string, codes: string[]): Promise<{ ok: boolean; modules: string[] }> {
+  return ecrire(`/api/v1/support/console/organisations/${id}/modules`, token, "PUT", { codes }, "Modules non enregistrés");
+}
