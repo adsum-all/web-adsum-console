@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 import { aAccesConsole, getSynthese, type Session } from "./api.js";
 import { Connexion } from "./components/Connexion.js";
 import { Conversation } from "./components/Conversation.js";
+import { Envois } from "./components/Envois.js";
 import { FileSupport } from "./components/FileSupport.js";
+import { Organisations } from "./components/Organisations.js";
 
-type Page = "support";
+type Page = "support" | "envois" | "organisations";
 
 const CLE_SESSION = "adsum.console.session";
 
@@ -130,6 +132,26 @@ export function App(): JSX.Element {
           <span>Support</span>
           {ouverts > 0 && <span className="rail-compte">{ouverts}</span>}
         </button>
+        <button
+          type="button"
+          className={`rail-lien${page === "envois" ? " actif" : ""}`}
+          onClick={() => {
+            setPage("envois");
+            setFilOuvert(null);
+          }}
+        >
+          <span>Santé des envois</span>
+        </button>
+        <button
+          type="button"
+          className={`rail-lien${page === "organisations" ? " actif" : ""}`}
+          onClick={() => {
+            setPage("organisations");
+            setFilOuvert(null);
+          }}
+        >
+          <span>Organisations</span>
+        </button>
         <div className="rail-pied">
           <span>{session.role}</span>
           <button type="button" className="rail-lien" onClick={fermerSession}>
@@ -141,6 +163,10 @@ export function App(): JSX.Element {
       <main className="contenu">
         {filOuvert ? (
           <Conversation token={session.token} filId={filOuvert} onRetour={() => setFilOuvert(null)} />
+        ) : page === "envois" ? (
+          <Envois token={session.token} />
+        ) : page === "organisations" ? (
+          <Organisations token={session.token} />
         ) : (
           <FileSupport token={session.token} onOuvrir={setFilOuvert} />
         )}

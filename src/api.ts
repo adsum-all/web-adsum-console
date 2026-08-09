@@ -215,3 +215,187 @@ export function repondre(
 export function getAgents(token: string): Promise<{ id: string; email: string }[]> {
   return lire<{ id: string; email: string }[]>("/api/v1/support/console/agents", token, "Agents indisponibles");
 }
+
+/* ---- Santé des envois ----------------------------------------------------- */
+
+export interface SanteEnvois {
+  jours: number;
+  par_statut: Record<string, number>;
+  echecs: number;
+  succes: number;
+  en_vol: number;
+  /** Failures to reserved domains, counted but kept out of the rate. */
+  echecs_adresses_fictives: number;
+  echecs_reels: number;
+  taux_echec: number;
+  motifs: { motif: string; n: number }[];
+  domaines: { domaine: string; echecs: number; adresses: number }[];
+  jour_par_jour: { jour: string; echecs: number; succes: number }[];
+}
+
+export interface DestinatairesEnEchec {
+  total: number;
+  affiches: number;
+  note: string;
+  /** Addresses are masked: the console diagnoses the platform, not its members. */
+  destinataires: { adresse: string; echecs: number; motif: string; dernier: string | null }[];
+}
+
+export function getSanteEnvois(token: string, jours: number): Promise<SanteEnvois> {
+  return lire<SanteEnvois>(`/api/v1/support/console/envois?jours=${jours}`, token, "Santé des envois indisponible");
+}
+
+export function getDestinatairesEnEchec(token: string, jours: number): Promise<DestinatairesEnEchec> {
+  return lire<DestinatairesEnEchec>(
+    `/api/v1/support/console/envois/destinataires?jours=${jours}&limite=25`,
+    token,
+    "Destinataires indisponibles",
+  );
+}
+
+/* ---- Organisations clientes et licences ----------------------------------- */
+
+export type EtatOrganisation = "evaluation" | "active" | "suspendue" | "resiliee";
+
+export interface Licence {
+  id: string;
+  formule: string;
+  membres_inclus: number | null;
+  debut: string | null;
+  fin: string | null;
+  gracieuse: boolean;
+  motif: string | null;
+  remplacee_le: string | null;
+  /** Computed by the server, so the browser cannot disagree about who is licensed. */
+  expiree: boolean;
+  jours_restants: number | null;
+}
+
+export interface OrganisationCliente {
+  id: string;
+  code: string;
+  nom: string;
+  pays: string | null;
+  ville: string | null;
+  contact_nom: string | null;
+  contact_email: string | null;
+  contact_telephone: string | null;
+  etat: EtatOrganisation;
+  suspendue_motif: string | null;
+  suspendue_le: string | null;
+  note: string | null;
+  cree_le: string | null;
+  licence: Licence | null;
+}
+
+export interface ListeOrganisations {
+  total: number;
+  par_etat: Record<EtatOrganisation, number>;
+  organisations: OrganisationCliente[];
+}
+
+export function getOrganisations(token: string): Promise<ListeOrganisations> {
+  return lire<ListeOrganisations>("/api/v1/support/console/organisations", token, "Organisations indisponibles");
+}
+
+export function creerOrganisation(
+  token: string,
+  o: { code: string; nom: string; ville: string; pays: string; contact_nom: string; contact_email: string; note: string },
+): Promise<{ ok: boolean; id: string }> {
+  return ecrire("/api/v1/support/console/organisations", token, "POST", {
+    code: o.code.trim(),
+    nom: o.nom.trim(),
+    ville: o.ville.trim(),
+    pays: o.pays.trim(),
+    contact_nom: o.contact_nom.trim(),
+    // An empty string is not an address: the server validates the format and would
+    // refuse "" rather than treat it as absent.
+    contact_email: o.contact_email.trim() || null,
+    note: o.note.trim(),
+  }, "Enregistrement impossible");
+}
+
+export function changerEtatOrganisation(
+  token: string,
+  id: string,
+  etat: EtatOrganisation,
+  motif: string,
+): Promise<{ ok: boolean; etat: EtatOrganisation }> {
+  return ecrire(`/api/v1/support/console/organisations/${id}/etat`, token, "PATCH", { etat, motif }, "Changement impossible");
+}
+
+export function accorderLicence(
+  token: string,
+  id: string,
+  l: { formule: string; membres_inclus: number | null; debut: string; fin: string | null; gracieuse: boolean; motif: string },
+): Promise<{ ok: boolean; id: string }> {
+  return ecrire(`/api/v1/support/console/organisations/${id}/licences`, token, "POST", l, "Attribution impossible");
+}
+
+export function getHistoriqueLicences(token: string, id: string): Promise<Licence[]> {
+  return lire<Licence[]>(`/api/v1/support/console/organisations/${id}/licences`, token, "Historique indisponible");
+}
+
+/* ---- Provisionnement ------------------------------------------------------ */
+
+export interface ModuleCatalogue {
+  code: string;
+  nom: string;
+  description: string | null;
+  actif: boolean;
+  /** True while no licence names any module: an empty subscription means everything. */
+  souscrit: boolean;
+}
+
+export interface EtapeProvisionnement {
+  code: string;
+  libelle: string;
+  fait: boolean;
+  detail?: string;
+  /** What to do by hand when the step cannot be automatic. */
+  manuel?: string;
+  /** True when the step does not merely fail but forbids going further. */
+  bloquant?: boolean;
+}
+
+export interface Diagnostic {
+  version_attendue: string;
+  etapes: EtapeProvisionnement[];
+}
+
+export interface HoteOrganisation {
+  id: string;
+  hote: string;
+  /** True when the host points at its own database rather than the historical one. */
+  base_propre: boolean;
+  note: string | null;
+}
+
+export function getCatalogueModules(token: string): Promise<ModuleCatalogue[]> {
+  return lire<ModuleCatalogue[]>("/api/v1/support/console/organisations/catalogue/modules", token, "Catalogue indisponible");
+}
+
+export function diagnostiquer(token: string, id: string, dsn: string): Promise<Diagnostic> {
+  return ecrire(`/api/v1/support/console/organisations/${id}/provisionnement/diagnostic`, token, "POST", { dsn }, "Diagnostic impossible");
+}
+
+export function semerReferentiels(token: string, id: string, dsn: string): Promise<{ fait: boolean; copiees: Record<string, number> }> {
+  return ecrire(`/api/v1/support/console/organisations/${id}/provisionnement/referentiels`, token, "POST", { dsn }, "Semis impossible");
+}
+
+export function getHotes(token: string, id: string): Promise<HoteOrganisation[]> {
+  return lire<HoteOrganisation[]>(`/api/v1/support/console/organisations/${id}/hotes`, token, "Domaines indisponibles");
+}
+
+export function rattacherHote(
+  token: string,
+  id: string,
+  hote: string,
+  dsn: string,
+): Promise<{ ok: boolean; hote: string; mode_avant: string; mode_apres: string; avertissement: string | null }> {
+  return ecrire(`/api/v1/support/console/organisations/${id}/hotes`, token, "POST", { hote, dsn }, "Rattachement impossible");
+}
+
+export function definirModules(token: string, id: string, codes: string[]): Promise<{ ok: boolean; modules: string[] }> {
+  return ecrire(`/api/v1/support/console/organisations/${id}/modules`, token, "PUT", { codes }, "Modules non enregistrés");
+}
