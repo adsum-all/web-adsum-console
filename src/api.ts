@@ -215,3 +215,40 @@ export function repondre(
 export function getAgents(token: string): Promise<{ id: string; email: string }[]> {
   return lire<{ id: string; email: string }[]>("/api/v1/support/console/agents", token, "Agents indisponibles");
 }
+
+/* ---- Santé des envois ----------------------------------------------------- */
+
+export interface SanteEnvois {
+  jours: number;
+  par_statut: Record<string, number>;
+  echecs: number;
+  succes: number;
+  en_vol: number;
+  /** Failures to reserved domains, counted but kept out of the rate. */
+  echecs_adresses_fictives: number;
+  echecs_reels: number;
+  taux_echec: number;
+  motifs: { motif: string; n: number }[];
+  domaines: { domaine: string; echecs: number; adresses: number }[];
+  jour_par_jour: { jour: string; echecs: number; succes: number }[];
+}
+
+export interface DestinatairesEnEchec {
+  total: number;
+  affiches: number;
+  note: string;
+  /** Addresses are masked: the console diagnoses the platform, not its members. */
+  destinataires: { adresse: string; echecs: number; motif: string; dernier: string | null }[];
+}
+
+export function getSanteEnvois(token: string, jours: number): Promise<SanteEnvois> {
+  return lire<SanteEnvois>(`/api/v1/support/console/envois?jours=${jours}`, token, "Santé des envois indisponible");
+}
+
+export function getDestinatairesEnEchec(token: string, jours: number): Promise<DestinatairesEnEchec> {
+  return lire<DestinatairesEnEchec>(
+    `/api/v1/support/console/envois/destinataires?jours=${jours}&limite=25`,
+    token,
+    "Destinataires indisponibles",
+  );
+}
