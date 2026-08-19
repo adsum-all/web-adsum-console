@@ -1,0 +1,11 @@
+# Pipeline de la console de l'editeur (application web).
+#
+# Tout vit dans les gabarits partages de sr-media-ai/adsum/deployment/ci-templates.
+# Ce fichier ne fait que declarer la pile du depot : la veille ou l'on ajoute un
+# controle de securite, il suffit de le poser dans le gabarit pour que ce depot en
+# beneficie, sans demande de fusion ici.
+
+include:
+  - project: 'sr-media-ai/adsum/deployment/ci-templates'
+    ref: main
+    file: '/templates/stack-web.yml'
